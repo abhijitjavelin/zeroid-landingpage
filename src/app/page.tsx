@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-const SIGNUP_URL = "https://zeroid.dev/signup";
+const SIGNUP_URL = "https://studio.highflame.ai/sign-up";
 
 // ---------------------------------------------------------------------------
 // Icons
