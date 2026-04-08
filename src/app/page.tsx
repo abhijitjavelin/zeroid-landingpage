@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,8 @@ import {
   Minus,
 } from "lucide-react";
 import Link from "next/link";
+
+const SIGNUP_URL = "https://zeroid.dev/signup";
 
 // ---------------------------------------------------------------------------
 // Icons
@@ -195,8 +198,8 @@ function Navbar() {
             <GithubIcon className="size-4" />
             <span className="hidden sm:inline">GitHub</span>
           </Link>
-          <Link href="https://github.com/highflame-ai/zeroid" className={cn(buttonVariants({ size: "sm" }))}>
-            Get Started
+          <Link href={SIGNUP_URL} className={cn(buttonVariants({ size: "sm" }))}>
+            Start Free
             <ArrowRight className="size-3.5" />
           </Link>
         </div>
@@ -335,13 +338,13 @@ function Hero() {
             </div>
 
             <div className="mt-10 flex flex-wrap items-center gap-4">
-              <Link href="https://github.com/highflame-ai/zeroid" className={cn(buttonVariants({ size: "lg" }))}>
-                Get Started
+              <Link href={SIGNUP_URL} className={cn(buttonVariants({ size: "lg" }))}>
+                Start Free
                 <ArrowRight className="size-4" />
               </Link>
               <Link href="https://github.com/highflame-ai/zeroid" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
-                Read the Docs
-                <ExternalLink className="size-3.5" />
+                <GithubIcon className="size-4" />
+                GitHub
               </Link>
             </div>
           </div>
@@ -626,46 +629,149 @@ function Architecture() {
 }
 
 // ---------------------------------------------------------------------------
-// How It Works
+// How It Works (with language tabs)
 // ---------------------------------------------------------------------------
 
-const steps = [
+type Lang = "python" | "typescript" | "rust" | "cli";
+
+const langLabels: Record<Lang, string> = {
+  python: "Python",
+  typescript: "TypeScript",
+  rust: "Rust",
+  cli: "CLI",
+};
+
+const steps: {
+  step: string;
+  title: string;
+  description: string;
+  code: Record<Lang, string>;
+}[] = [
   {
     step: "01",
     title: "Register an agent",
     description:
-      "Give each agent a SPIFFE identity. ZeroID issues a unique URI and EC P-256 keypair.",
-    code: `zeroid agent create \\
+      "Give each agent a unique identity. ZeroID issues credentials you can use immediately.",
+    code: {
+      cli: `zeroid agent create \\
   --name orchestrator \\
   --scope "read:docs,write:summaries"
 
-# \u2192 spiffe://zeroid.dev/agent/orchestrator-7f3a
-# \u2192 EC P-256 keypair written to ./keys/`,
+# \u2192 spiffe://zeroid.dev/agent/orchestrator-7f3a`,
+      python: `from zeroid import ZeroID
+
+client = ZeroID()
+agent = client.agents.create(
+    name="orchestrator",
+    scope=["read:docs", "write:summaries"],
+)
+# agent.uri \u2192 spiffe://zeroid.dev/agent/orchestrator-7f3a`,
+      typescript: `import { ZeroID } from "@zeroid/sdk";
+
+const zeroid = new ZeroID();
+const agent = await zeroid.agents.create({
+  name: "orchestrator",
+  scope: ["read:docs", "write:summaries"],
+});
+// agent.uri \u2192 spiffe://zeroid.dev/agent/orchestrator-7f3a`,
+      rust: `use zeroid::ZeroID;
+
+let client = ZeroID::new();
+let agent = client.agents().create(
+    "orchestrator",
+    &["read:docs", "write:summaries"],
+).await?;
+// agent.uri \u2192 spiffe://zeroid.dev/agent/orchestrator-7f3a`,
+    },
   },
   {
     step: "02",
     title: "Issue credentials",
     description:
-      "Request short-lived tokens with attenuated scope. The full delegation chain is embedded in every credential.",
-    code: `token, err := zeroid.Issue(ctx, &zeroid.Claim{
-  Agent:    "spiffe://zeroid.dev/agent/a1",
-  OnBehalf: "user:alice@acme.corp",
-  Scope:    []string{"read:docs"},
-  TTL:      15 * time.Minute,
-})`,
+      "Request short-lived tokens with narrowed scope. The full delegation chain is embedded in every credential.",
+    code: {
+      cli: `zeroid token issue \\
+  --agent orchestrator \\
+  --on-behalf-of "alice@acme.corp" \\
+  --scope "read:docs" \\
+  --ttl 15m`,
+      python: `token = client.tokens.issue(
+    agent="orchestrator",
+    on_behalf_of="alice@acme.corp",
+    scope=["read:docs"],
+    ttl="15m",
+)`,
+      typescript: `const token = await zeroid.tokens.issue({
+  agent: "orchestrator",
+  onBehalfOf: "alice@acme.corp",
+  scope: ["read:docs"],
+  ttl: "15m",
+});`,
+      rust: `let token = client.tokens().issue(
+    "orchestrator",
+    "alice@acme.corp",
+    &["read:docs"],
+    Duration::minutes(15),
+).await?;`,
+    },
   },
   {
     step: "03",
     title: "Verify anywhere",
     description:
-      "Any service can verify the token, inspect the delegation chain, and enforce scope boundaries. Zero network calls required.",
-    code: `claims, err := zeroid.Verify(ctx, tokenString)
-// claims.Agent    \u2192 spiffe://zeroid.dev/agent/a1
-// claims.OnBehalf \u2192 user:alice@acme.corp
-// claims.Scope    \u2192 ["read:docs"]
-// claims.Chain    \u2192 [alice \u2192 orchestrator \u2192 a1]`,
+      "Any service can verify the token and inspect the delegation chain. Zero network calls required.",
+    code: {
+      cli: `zeroid token verify "$TOKEN"
+
+# agent:      spiffe://zeroid.dev/agent/orchestrator
+# on_behalf:  alice@acme.corp
+# scope:      ["read:docs"]
+# chain:      alice \u2192 orchestrator`,
+      python: `claims = client.tokens.verify(token_string)
+# claims.agent      \u2192 orchestrator
+# claims.on_behalf  \u2192 alice@acme.corp
+# claims.scope      \u2192 ["read:docs"]
+# claims.chain      \u2192 [alice, orchestrator]`,
+      typescript: `const claims = await zeroid.tokens.verify(tokenString);
+// claims.agent     \u2192 orchestrator
+// claims.onBehalf  \u2192 alice@acme.corp
+// claims.scope     \u2192 ["read:docs"]
+// claims.chain     \u2192 [alice, orchestrator]`,
+      rust: `let claims = client.tokens().verify(&token_string).await?;
+// claims.agent      \u2192 orchestrator
+// claims.on_behalf  \u2192 alice@acme.corp
+// claims.scope      \u2192 ["read:docs"]
+// claims.chain      \u2192 [alice, orchestrator]`,
+    },
   },
 ];
+
+function CodeBlock({ code }: { code: Record<Lang, string> }) {
+  const [lang, setLang] = useState<Lang>("python");
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      <div className="flex items-center gap-1 border-b border-border px-2 py-1.5">
+        {(Object.keys(langLabels) as Lang[]).map((l) => (
+          <button
+            key={l}
+            onClick={() => setLang(l)}
+            className={cn(
+              "rounded-md px-3 py-1.5 font-mono text-xs transition-colors",
+              lang === l
+                ? "bg-primary/10 font-medium text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {langLabels[l]}
+          </button>
+        ))}
+      </div>
+      <pre className="overflow-x-auto p-5 font-mono text-sm leading-relaxed text-foreground/80">
+        <code>{code[lang]}</code>
+      </pre>
+    </div>
+  );
+}
 
 function HowItWorks() {
   return (
@@ -681,8 +787,7 @@ function HowItWorks() {
             agent identity.
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            From zero to cryptographically verifiable agent credentials in
-            minutes.
+            From zero to verifiable agent credentials in minutes.
           </p>
         </div>
 
@@ -703,17 +808,7 @@ function HowItWorks() {
                   {step.description}
                 </p>
               </div>
-              <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-                <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
-                  <Terminal className="size-3.5 text-muted-foreground" />
-                  <span className="font-mono text-xs text-muted-foreground">
-                    terminal
-                  </span>
-                </div>
-                <pre className="overflow-x-auto p-5 font-mono text-sm leading-relaxed text-foreground/80">
-                  <code>{step.code}</code>
-                </pre>
-              </div>
+              <CodeBlock code={step.code} />
             </div>
           ))}
         </div>
@@ -860,28 +955,6 @@ const standards = [
   { name: "SPIFFE", description: "Secure production identity framework for agents" },
 ];
 
-const roadmapItems = [
-  {
-    title: "Decision-Rights Matrix binding",
-    description: "Cryptographic hash of governance policy embedded in every delegation credential. Prove which policy version an agent operated under at the moment it acted.",
-    status: "In design",
-  },
-  {
-    title: "Forward-secret identity-bound channels",
-    description: "Noise XX or equivalent protocol layer where the channel and the agent identity are the same cryptographic object. For cross-org agent communication.",
-    status: "Planned",
-  },
-  {
-    title: "Hardware attestation",
-    description: "HSM and enclave binding for agent credentials. AWS Nitro, GCP vTPM, and Azure SEV-SNP attestation documents embedded in ZeroID tokens.",
-    status: "Planned",
-  },
-  {
-    title: "Multi-cloud workload federation",
-    description: "ZeroID as the OIDC provider that AWS STS, GCP Workload Identity Federation, and Azure Entra ID trust for cross-cloud agent identity.",
-    status: "In progress",
-  },
-];
 
 function Standards() {
   return (
@@ -929,61 +1002,6 @@ function Standards() {
 }
 
 // ---------------------------------------------------------------------------
-// Roadmap
-// ---------------------------------------------------------------------------
-
-function Roadmap() {
-  return (
-    <section className="border-t border-border bg-card/30">
-      <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
-        <div className="max-w-2xl">
-          <p className="font-heading text-sm font-medium tracking-wide text-primary">
-            Roadmap
-          </p>
-          <h2 className="mt-3 font-heading text-3xl font-bold tracking-tight sm:text-4xl">
-            What&apos;s next.
-          </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Closing the remaining gaps to full standard conformance.
-          </p>
-        </div>
-
-        <div className="mt-12 grid gap-6 sm:grid-cols-2">
-          {roadmapItems.map((item) => (
-            <div
-              key={item.title}
-              className="rounded-lg border border-border/60 bg-card/50 p-6"
-            >
-              <div className="flex items-center gap-3">
-                <h3 className="font-heading text-base font-semibold">
-                  {item.title}
-                </h3>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "shrink-0 text-xs",
-                    item.status === "In progress"
-                      ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-600"
-                      : item.status === "In design"
-                        ? "border-amber-500/30 bg-amber-500/5 text-amber-600"
-                        : "border-border text-muted-foreground"
-                  )}
-                >
-                  {item.status}
-                </Badge>
-              </div>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {item.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // CTA (merged with Open Source)
 // ---------------------------------------------------------------------------
 
@@ -1023,13 +1041,13 @@ function CTA() {
             </span>
           </div>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Link href="https://github.com/highflame-ai/zeroid" className={cn(buttonVariants({ size: "lg" }))}>
-              <GithubIcon className="size-4" />
-              View on GitHub
+            <Link href={SIGNUP_URL} className={cn(buttonVariants({ size: "lg" }))}>
+              Start Free
+              <ArrowRight className="size-4" />
             </Link>
             <Link href="https://github.com/highflame-ai/zeroid" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
-              Read the Docs
-              <ExternalLink className="size-3.5" />
+              <GithubIcon className="size-4" />
+              GitHub
             </Link>
           </div>
         </div>
@@ -1081,7 +1099,6 @@ export default function Home() {
         <HowItWorks />
         <Comparison />
         <Standards />
-        <Roadmap />
         <CTA />
       </main>
       <Footer />
