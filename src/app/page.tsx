@@ -105,63 +105,71 @@ function ArchitectureDiagram() {
         </span>
       </div>
       <div className="p-6 md:p-10">
-        <svg viewBox="0 0 900 380" className="w-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 900 420" className="w-full" fill="none" xmlns="http://www.w3.org/2000/svg">
           {/* Row 1: ZeroID */}
           <rect x="330" y="10" width="240" height="70" rx="12" className="fill-primary/10 stroke-primary/40" strokeWidth="2" />
           <text x="450" y="40" textAnchor="middle" className="fill-primary" fontSize="18" fontWeight="700" fontFamily="monospace">ZeroID</text>
           <text x="450" y="62" textAnchor="middle" className="fill-muted-foreground" fontSize="11" fontFamily="monospace">Identity Provider</text>
 
-          {/* Vertical line from ZeroID down to horizontal bar */}
-          <line x1="450" y1="80" x2="450" y2="120" className="stroke-border" strokeWidth="1.5" strokeDasharray="4 3" />
+          {/* ZeroID → Pipeline connector */}
+          <line x1="450" y1="80" x2="450" y2="110" className="stroke-border" strokeWidth="1.5" strokeDasharray="4 3" />
 
-          {/* Horizontal connector bar */}
-          <line x1="150" y1="120" x2="750" y2="120" className="stroke-border" strokeWidth="1.5" />
+          {/* Row 2: Horizontal pipeline — 1 → 2 → 3 as a connected flow */}
+          {/* Pipeline background bar */}
+          <rect x="60" y="110" width="780" height="80" rx="12" className="fill-muted/30 stroke-border/50" strokeWidth="1" />
 
-          {/* Vertical drops to each box */}
-          <line x1="150" y1="120" x2="150" y2="150" className="stroke-border" strokeWidth="1.5" />
-          <line x1="450" y1="120" x2="450" y2="150" className="stroke-border" strokeWidth="1.5" />
-          <line x1="750" y1="120" x2="750" y2="150" className="stroke-border" strokeWidth="1.5" />
+          {/* Step 1 */}
+          <circle cx="190" cy="135" r="10" className="fill-primary" />
+          <text x="190" y="139" textAnchor="middle" className="fill-white" fontSize="9" fontWeight="600" fontFamily="monospace">1</text>
+          <text x="190" y="158" textAnchor="middle" className="fill-foreground" fontSize="12" fontWeight="600" fontFamily="monospace">Register</text>
+          <text x="190" y="175" textAnchor="middle" className="fill-muted-foreground" fontSize="9" fontFamily="monospace">SPIFFE URI + keypair</text>
 
-          {/* Row 2: Three capability boxes — evenly spaced, no overlap */}
-          <rect x="40" y="150" width="220" height="75" rx="10" className="fill-card stroke-border" strokeWidth="1.5" />
-          <text x="150" y="180" textAnchor="middle" className="fill-foreground" fontSize="13" fontWeight="600" fontFamily="monospace">Register Agent</text>
-          <text x="150" y="200" textAnchor="middle" className="fill-muted-foreground" fontSize="10" fontFamily="monospace">SPIFFE URI + EC P-256</text>
+          {/* Arrow 1 → 2 */}
+          <line x1="300" y1="150" x2="340" y2="150" className="stroke-primary/40" strokeWidth="1.5" />
+          <polygon points="336,145 346,150 336,155" className="fill-primary/40" />
 
-          <rect x="340" y="150" width="220" height="75" rx="10" className="fill-card stroke-border" strokeWidth="1.5" />
-          <text x="450" y="180" textAnchor="middle" className="fill-foreground" fontSize="13" fontWeight="600" fontFamily="monospace">Issue Token</text>
-          <text x="450" y="200" textAnchor="middle" className="fill-muted-foreground" fontSize="10" fontFamily="monospace">Short-lived JWT + chain</text>
+          {/* Step 2 */}
+          <circle cx="450" cy="135" r="10" className="fill-primary" />
+          <text x="450" y="139" textAnchor="middle" className="fill-white" fontSize="9" fontWeight="600" fontFamily="monospace">2</text>
+          <text x="450" y="158" textAnchor="middle" className="fill-foreground" fontSize="12" fontWeight="600" fontFamily="monospace">Issue Token</text>
+          <text x="450" y="175" textAnchor="middle" className="fill-muted-foreground" fontSize="9" fontFamily="monospace">Short-lived JWT + chain</text>
 
-          <rect x="640" y="150" width="220" height="75" rx="10" className="fill-card stroke-border" strokeWidth="1.5" />
-          <text x="750" y="180" textAnchor="middle" className="fill-foreground" fontSize="13" fontWeight="600" fontFamily="monospace">Verify + Enforce</text>
-          <text x="750" y="200" textAnchor="middle" className="fill-muted-foreground" fontSize="10" fontFamily="monospace">Scope, chain, revocation</text>
+          {/* Arrow 2 → 3 */}
+          <line x1="560" y1="150" x2="600" y2="150" className="stroke-primary/40" strokeWidth="1.5" />
+          <polygon points="596,145 606,150 596,155" className="fill-primary/40" />
 
-          {/* Row 2 → Row 3 connectors */}
-          <line x1="150" y1="225" x2="150" y2="280" className="stroke-primary/30" strokeWidth="1.5" strokeDasharray="4 3" />
-          <line x1="450" y1="225" x2="450" y2="280" className="stroke-primary/30" strokeWidth="1.5" strokeDasharray="4 3" />
-          <line x1="750" y1="225" x2="750" y2="280" className="stroke-primary/30" strokeWidth="1.5" strokeDasharray="4 3" />
+          {/* Step 3 */}
+          <circle cx="710" cy="135" r="10" className="fill-primary" />
+          <text x="710" y="139" textAnchor="middle" className="fill-white" fontSize="9" fontWeight="600" fontFamily="monospace">3</text>
+          <text x="710" y="158" textAnchor="middle" className="fill-foreground" fontSize="12" fontWeight="600" fontFamily="monospace">Verify + Enforce</text>
+          <text x="710" y="175" textAnchor="middle" className="fill-muted-foreground" fontSize="9" fontFamily="monospace">Scope, chain, revocation</text>
+
+          {/* Pipeline label */}
+          <text x="450" y="205" textAnchor="middle" className="fill-muted-foreground" fontSize="9" fontFamily="monospace">Every agent goes through all 3 steps for every service</text>
+
+          {/* Pipeline → Services: single wide connector */}
+          <line x1="450" y1="215" x2="450" y2="250" className="stroke-border" strokeWidth="1.5" strokeDasharray="4 3" />
+
+          {/* Fan-out lines to each service */}
+          <line x1="450" y1="250" x2="150" y2="290" className="stroke-primary/25" strokeWidth="1.5" strokeDasharray="4 3" />
+          <line x1="450" y1="250" x2="450" y2="290" className="stroke-primary/25" strokeWidth="1.5" strokeDasharray="4 3" />
+          <line x1="450" y1="250" x2="750" y2="290" className="stroke-primary/25" strokeWidth="1.5" strokeDasharray="4 3" />
 
           {/* Row 3 label */}
-          <text x="450" y="268" textAnchor="middle" className="fill-muted-foreground" fontSize="10" fontFamily="monospace">DOWNSTREAM SERVICES</text>
+          <text x="450" y="280" textAnchor="middle" className="fill-muted-foreground" fontSize="10" fontFamily="monospace">DOWNSTREAM SERVICES</text>
 
-          {/* Row 3: Downstream MCP services */}
-          <rect x="40" y="280" width="220" height="50" rx="8" className="fill-primary/5 stroke-primary/20" strokeWidth="1" />
-          <text x="150" y="310" textAnchor="middle" className="fill-primary" fontSize="12" fontFamily="monospace">GitHub MCP</text>
+          {/* Row 3: Services — all receive the full pipeline */}
+          <rect x="40" y="295" width="220" height="55" rx="8" className="fill-primary/5 stroke-primary/20" strokeWidth="1" />
+          <text x="150" y="318" textAnchor="middle" className="fill-primary" fontSize="12" fontWeight="500" fontFamily="monospace">GitHub MCP</text>
+          <text x="150" y="336" textAnchor="middle" className="fill-muted-foreground" fontSize="9" fontFamily="monospace">register + issue + verify</text>
 
-          <rect x="340" y="280" width="220" height="50" rx="8" className="fill-primary/5 stroke-primary/20" strokeWidth="1" />
-          <text x="450" y="310" textAnchor="middle" className="fill-primary" fontSize="12" fontFamily="monospace">Slack MCP</text>
+          <rect x="340" y="295" width="220" height="55" rx="8" className="fill-primary/5 stroke-primary/20" strokeWidth="1" />
+          <text x="450" y="318" textAnchor="middle" className="fill-primary" fontSize="12" fontWeight="500" fontFamily="monospace">Slack MCP</text>
+          <text x="450" y="336" textAnchor="middle" className="fill-muted-foreground" fontSize="9" fontFamily="monospace">register + issue + verify</text>
 
-          <rect x="640" y="280" width="220" height="50" rx="8" className="fill-primary/5 stroke-primary/20" strokeWidth="1" />
-          <text x="750" y="310" textAnchor="middle" className="fill-primary" fontSize="12" fontFamily="monospace">Database MCP</text>
-
-          {/* Step number badges */}
-          <circle cx="150" cy="148" r="10" className="fill-primary" />
-          <text x="150" y="152" textAnchor="middle" className="fill-white" fontSize="9" fontWeight="600" fontFamily="monospace">1</text>
-
-          <circle cx="450" cy="148" r="10" className="fill-primary" />
-          <text x="450" y="152" textAnchor="middle" className="fill-white" fontSize="9" fontWeight="600" fontFamily="monospace">2</text>
-
-          <circle cx="750" cy="148" r="10" className="fill-primary" />
-          <text x="750" y="152" textAnchor="middle" className="fill-white" fontSize="9" fontWeight="600" fontFamily="monospace">3</text>
+          <rect x="640" y="295" width="220" height="55" rx="8" className="fill-primary/5 stroke-primary/20" strokeWidth="1" />
+          <text x="750" y="318" textAnchor="middle" className="fill-primary" fontSize="12" fontWeight="500" fontFamily="monospace">Database MCP</text>
+          <text x="750" y="336" textAnchor="middle" className="fill-muted-foreground" fontSize="9" fontFamily="monospace">register + issue + verify</text>
         </svg>
       </div>
     </div>
